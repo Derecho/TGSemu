@@ -1,6 +1,9 @@
 // TGS emulator
 // Made by Derecho
 
+use std::io;
+use std::io::Write;
+
 struct TGS {
     registers_gp: [u8; 8],
     registers_bt: [u8; 2],
@@ -161,12 +164,210 @@ impl TGS {
     fn store_register(&mut self, reg: u8, val: u8) {
         match reg {
             x @ 0b00000000 ... 0b00000111 => self.registers_gp[x as usize] = val,
-            x @ 0b00010000 ... 0b00010001 => self.registers_bt[(x & !0b00010000) as usize] = val,
-            x @ 0b00010010 ... 0b00010101 => self.registers_dp[(x & !0b00010010) as usize] = val,
+            x @ 0b00010000 ... 0b00010001 => self.registers_bt[(x - 0b00010000) as usize] = val,
+            x @ 0b00010010 ... 0b00010101 => self.registers_dp[(x - 0b00010010) as usize] = val,
             0b00010110                    => self.register_pc = val,
             0b00010111                    => self.register_cr = val,
             _                             => panic!("Invalid register")
         }
+    }
+
+    fn print_display(&self) {
+        //  _   _   _   _
+        // |_| |_| |_| |_|
+        // |_| |_| |_| |_| 
+        //
+        //  1
+        // 6 2
+        //  7
+        // 5 3
+        //  4
+
+        // Line 1
+        print!("  ");
+        if (self.registers_dp[3] & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        print!("   ");
+        if (self.registers_dp[2] & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        print!("   ");
+        if (self.registers_dp[1] & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        print!("   ");
+        if (self.registers_dp[0] & 1) == 1 {
+            print!("_");
+        }
+
+        print!("\n");
+        io::stdout().flush().ok();
+
+        // Line 2
+        print!(" ");
+        if ((self.registers_dp[3] >> 5) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[3] >> 6) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[3] >> 1) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[2] >> 5) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[2] >> 6) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[2] >> 1) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[1] >> 5) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[1] >> 6) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[1] >> 1) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[0] >> 5) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[0] >> 6) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[0] >> 1) & 1) == 1 {
+            print!("|");
+        }
+
+        print!("\n");
+        io::stdout().flush().ok();
+
+        // Line 3
+        print!(" ");
+        if ((self.registers_dp[3] >> 4) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[3] >> 3) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[3] >> 2) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[2] >> 4) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[2] >> 3) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[2] >> 2) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[1] >> 4) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[1] >> 3) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[1] >> 2) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        print!(" ");
+        if ((self.registers_dp[0] >> 4) & 1) == 1 {
+            print!("|");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[0] >> 3) & 1) == 1 {
+            print!("_");
+        }
+        else {
+            print!(" ");
+        }
+        if ((self.registers_dp[0] >> 2) & 1) == 1 {
+            print!("|");
+        }
+
+        print!("\n");
+        io::stdout().flush().ok();
     }
 }
 
@@ -181,5 +382,8 @@ fn main() {
         register_cr: 0
     };
 
-    tgs.instruct(0b00010001, 0b00000000, 5);
+    // Display "hi"
+    tgs.instruct(0x61, 0x13, 0x06);
+    tgs.instruct(0x61, 0x14, 0x74);
+    tgs.print_display();
 }
