@@ -10,6 +10,7 @@ struct TGS {
     registers_dp: [u8; 4],
     register_pc: u8,
     register_cr: u8,
+    ui: UI,
 }
 impl TGS {
     fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) {
@@ -172,7 +173,14 @@ impl TGS {
         }
     }
 
-    fn print_display(&self) {
+    fn update_display(&self) {
+        self.ui.update_display(self.registers_dp);
+    }
+}
+
+struct UI;
+impl UI {
+    fn update_display(&self, dp: [u8; 4]) {
         //  _   _   _   _
         // |_| |_| |_| |_|
         // |_| |_| |_| |_| 
@@ -185,28 +193,28 @@ impl TGS {
 
         // Line 1
         print!("  ");
-        if (self.registers_dp[3] & 1) == 1 {
+        if (dp[3] & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
         print!("   ");
-        if (self.registers_dp[2] & 1) == 1 {
+        if (dp[2] & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
         print!("   ");
-        if (self.registers_dp[1] & 1) == 1 {
+        if (dp[1] & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
         print!("   ");
-        if (self.registers_dp[0] & 1) == 1 {
+        if (dp[0] & 1) == 1 {
             print!("_");
         }
 
@@ -215,76 +223,76 @@ impl TGS {
 
         // Line 2
         print!(" ");
-        if ((self.registers_dp[3] >> 5) & 1) == 1 {
+        if ((dp[3] >> 5) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[3] >> 6) & 1) == 1 {
+        if ((dp[3] >> 6) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[3] >> 1) & 1) == 1 {
+        if ((dp[3] >> 1) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[2] >> 5) & 1) == 1 {
+        if ((dp[2] >> 5) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[2] >> 6) & 1) == 1 {
+        if ((dp[2] >> 6) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[2] >> 1) & 1) == 1 {
+        if ((dp[2] >> 1) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[1] >> 5) & 1) == 1 {
+        if ((dp[1] >> 5) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[1] >> 6) & 1) == 1 {
+        if ((dp[1] >> 6) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[1] >> 1) & 1) == 1 {
+        if ((dp[1] >> 1) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[0] >> 5) & 1) == 1 {
+        if ((dp[0] >> 5) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[0] >> 6) & 1) == 1 {
+        if ((dp[0] >> 6) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[0] >> 1) & 1) == 1 {
+        if ((dp[0] >> 1) & 1) == 1 {
             print!("|");
         }
 
@@ -293,76 +301,76 @@ impl TGS {
 
         // Line 3
         print!(" ");
-        if ((self.registers_dp[3] >> 4) & 1) == 1 {
+        if ((dp[3] >> 4) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[3] >> 3) & 1) == 1 {
+        if ((dp[3] >> 3) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[3] >> 2) & 1) == 1 {
+        if ((dp[3] >> 2) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[2] >> 4) & 1) == 1 {
+        if ((dp[2] >> 4) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[2] >> 3) & 1) == 1 {
+        if ((dp[2] >> 3) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[2] >> 2) & 1) == 1 {
+        if ((dp[2] >> 2) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[1] >> 4) & 1) == 1 {
+        if ((dp[1] >> 4) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[1] >> 3) & 1) == 1 {
+        if ((dp[1] >> 3) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[1] >> 2) & 1) == 1 {
+        if ((dp[1] >> 2) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
         print!(" ");
-        if ((self.registers_dp[0] >> 4) & 1) == 1 {
+        if ((dp[0] >> 4) & 1) == 1 {
             print!("|");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[0] >> 3) & 1) == 1 {
+        if ((dp[0] >> 3) & 1) == 1 {
             print!("_");
         }
         else {
             print!(" ");
         }
-        if ((self.registers_dp[0] >> 2) & 1) == 1 {
+        if ((dp[0] >> 2) & 1) == 1 {
             print!("|");
         }
 
@@ -374,16 +382,19 @@ impl TGS {
 fn main() {
     // TODO Load file
 
+    let ui = UI;
+
     let mut tgs = TGS {
         registers_gp: [0; 8],
         registers_bt: [0; 2],
         registers_dp: [0; 4],
         register_pc: 0,
-        register_cr: 0
+        register_cr: 0,
+        ui: ui
     };
 
     // Display "hi"
     tgs.instruct(0x61, 0x13, 0x06);
     tgs.instruct(0x61, 0x14, 0x74);
-    tgs.print_display();
+    tgs.update_display();
 }
