@@ -12,74 +12,90 @@ impl TGS {
     fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) {
         match opcode {
             0b00010000 => {
-                let result = self.add(self.load_register(operand_left), self.load_register(operand_right));
+                // ADD
+                let result = self.load_register(operand_left) + self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00010001 => {
-                let result = self.add(self.load_register(operand_left), operand_right);
+                // ADD
+                let result = self.load_register(operand_left) + operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00010010 => {
-                let result = self.sub(self.load_register(operand_left), self.load_register(operand_right));
+                // SUB
+                let result = self.load_register(operand_left) - self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00010011 => {
-                let result = self.sub(self.load_register(operand_left), operand_right);
+                // SUB
+                let result = self.load_register(operand_left) - operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00100000 => {
-                let result = self.lsh(self.load_register(operand_left), self.load_register(operand_right));
+                // LSH
+                let result = self.load_register(operand_left) << self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00100001 => {
-                let result = self.lsh(self.load_register(operand_left), operand_right);
+                // LSH
+                let result = self.load_register(operand_left) << operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00100010 => {
-                let result = self.rsh(self.load_register(operand_left), self.load_register(operand_right));
+                // RSH
+                let result = self.load_register(operand_left) >> self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00100011 => {
-                let result = self.rsh(self.load_register(operand_left), operand_right);
+                // RSH
+                let result = self.load_register(operand_left) >> operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110000 => {
-                let result = self.and(self.load_register(operand_left), self.load_register(operand_right));
+                // AND
+                let result = self.load_register(operand_left) & self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00110001 => {
-                let result = self.and(self.load_register(operand_left), operand_right);
+                // AND
+                let result = self.load_register(operand_left) & operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110010 => {
-                let result = self.or(self.load_register(operand_left), self.load_register(operand_right));
+                // OR
+                let result = self.load_register(operand_left) | self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00110011 => {
-                let result = self.or(self.load_register(operand_left), operand_right);
+                // OR
+                let result = self.load_register(operand_left) | operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110100 => {
-                let result = self.xor(self.load_register(operand_left), self.load_register(operand_right));
+                // XOR
+                let result = self.load_register(operand_left) ^ self.load_register(operand_right);
                 self.store_register(operand_left, result);
             }
             0b00110101 => {
-                let result = self.xor(self.load_register(operand_left), operand_right);
+                // XOR
+                let result = self.load_register(operand_left) ^ operand_right;
                 self.store_register(operand_left, result);
             }
 
             0b01000000 => {
-                let result = self.cmp(self.load_register(operand_left), self.load_register(operand_right));
+                // CMP
+                let result = self.load_register(operand_left) - self.load_register(operand_right);
                 self.register_cr = result;
             }
             0b01000001 => {
-                let result = self.cmp(self.load_register(operand_left), operand_right);
+                // CMP
+                let result = self.load_register(operand_left) - operand_right;
                 self.register_cr = result;
             }
 
@@ -104,14 +120,14 @@ impl TGS {
 
             0b01010110 => {
                 // BG
-                if self.register_cr > 127 {  // 2's complement -128...-1
+                if self.register_cr < 128 {
                     self.register_pc = operand_left;
                 }
             }
 
             0b01011000 => {
                 // BL
-                if self.register_cr < 128 {
+                if self.register_cr > 127 {  // 2's complement -128...-1
                     self.register_pc = operand_left;
                 }
             }
@@ -152,39 +168,6 @@ impl TGS {
             _                             => panic!("Invalid register")
         }
     }
-
-    fn add(&self, a: u8, b: u8) -> u8 {
-        a+b
-    }
-
-    fn sub(&self, a: u8, b: u8) -> u8 {
-        a-b
-    }
-
-    fn lsh(&self, a: u8, b: u8) -> u8 {
-        a<<b
-    }
-
-    fn rsh(&self, a: u8, b: u8) -> u8 {
-        a>>b
-    }
-
-    fn and(&self, a: u8, b: u8) -> u8 {
-        a&b
-    }
-
-    fn or(&self, a: u8, b: u8) -> u8 {
-        a|b
-    }
-
-    fn xor(&self, a: u8, b: u8) -> u8 {
-        a^b
-    }
-
-    fn cmp(&self, a: u8, b: u8) -> u8 {
-        a-b
-    }
-
 }
 
 fn main() {
