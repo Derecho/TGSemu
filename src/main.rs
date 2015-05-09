@@ -1,12 +1,15 @@
 // TGS emulator
 // Made by Derecho
 
+extern crate libc;
+
 use std::io;
 use std::io::Read;
 use std::io::Write;
 use std::fs::File;
 use std::env;
 use std::process;
+use libc::funcs::posix88::unistd;
 
 struct TGS {
     registers_gp: [u8; 8],
@@ -397,5 +400,11 @@ fn main() {
     loop {
         pc = tgs.instruct(program[pc][0], program[pc][1], program[pc][2]) as usize;
         tgs.update_display();
+
+        // Sleep for 2uS to approximate 500kHz clock. Real clock speed will be less due to time
+        // taken by all calls in this loop.
+        unsafe {
+            unistd::usleep(2);
+        }
     }
 }

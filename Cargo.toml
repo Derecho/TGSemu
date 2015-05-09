@@ -3,3 +3,7 @@
 name = "TGSemu"
 version = "0.0.1"
 authors = [ "Derecho <derecho@sector5d.com>" ]
+
+[dependencies]
+
+libc = "0.1.7"
