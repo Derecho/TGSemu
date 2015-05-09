@@ -13,7 +13,9 @@ struct TGS {
     ui: UI,
 }
 impl TGS {
-    fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) {
+    fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) -> u8 {
+        self.register_pc += 1;
+
         match opcode {
             0b00010000 => {
                 // ADD
@@ -149,6 +151,8 @@ impl TGS {
 
             _          => panic!("Invalid opcode")
         }
+
+        self.register_pc
     }
 
     fn load_register(&self, reg: u8) -> u8 {
