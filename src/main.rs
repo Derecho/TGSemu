@@ -2,7 +2,11 @@
 // Made by Derecho
 
 use std::io;
+use std::io::Read;
 use std::io::Write;
+use std::fs::File;
+use std::env;
+use std::process;
 
 struct TGS {
     registers_gp: [u8; 8],
@@ -161,6 +165,8 @@ impl UI {
         //  7
         // 5 3
         //  4
+
+        print!("\x1B[0;0H");  // Reset cursor
 
         // Line 1
         print!("  ");
@@ -351,7 +357,27 @@ impl UI {
 }
 
 fn main() {
-    // TODO Load file
+    if env::args().count() != 2 {
+        println!("Usage: {} <rom.bin>", env::args().next().unwrap());
+        process::exit(1);
+    }
+
+    // Read ROM file
+    let filename = env::args().skip(1).next().unwrap();
+    let mut file = File::open(filename).ok().expect("Error opening ROM file");
+    let mut program: Vec<[u8; 3]> = Vec::new();
+    let mut buf: [u8; 3] = [0; 3];
+    loop {
+        let n = file.read(&mut buf).ok().unwrap();
+        if n == 0 {
+            // Finished reading file
+            break;
+        }
+        else if n != 3 {
+            panic!("Invalid ROM file");
+        }
+        program.push(buf);
+    }
 
     let ui = UI;
 
@@ -364,8 +390,12 @@ fn main() {
         ui: ui
     };
 
-    // Display "hi"
-    tgs.instruct(0x61, 0x13, 0x06);
-    tgs.instruct(0x61, 0x14, 0x74);
-    tgs.update_display();
+    print!("\x1B[?25l");  // Hide cursor
+    print!("\x1B[2J");  // Clear screen
+
+    let mut pc = 0;
+    loop {
+        pc = tgs.instruct(program[pc][0], program[pc][1], program[pc][2]) as usize;
+        tgs.update_display();
+    }
 }
