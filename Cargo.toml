@@ -7,3 +7,4 @@ authors = [ "Derecho <derecho@sector5d.com>" ]
 [dependencies]
 
 libc = "0.1.7"
+termios = "0.1.0"

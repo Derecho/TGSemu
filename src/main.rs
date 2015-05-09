@@ -2,6 +2,7 @@
 // Made by Derecho
 
 extern crate libc;
+extern crate termios;
 
 use std::io;
 use std::io::Read;
@@ -10,6 +11,7 @@ use std::fs::File;
 use std::env;
 use std::process;
 use libc::funcs::posix88::unistd;
+use termios::*;
 
 struct TGS {
     registers_gp: [u8; 8],
@@ -132,8 +134,8 @@ impl TGS {
     fn load_register(&self, reg: u8) -> u8 {
         match reg {
             x @ 0b00000000 ... 0b00000111 => self.registers_gp[x as usize],
-            x @ 0b00010000 ... 0b00010001 => self.registers_bt[(x & !0b00010000) as usize],
-            x @ 0b00010010 ... 0b00010101 => self.registers_dp[(x & !0b00010010) as usize],
+            x @ 0b00010000 ... 0b00010001 => self.registers_bt[(x - 0b00010000) as usize],
+            x @ 0b00010010 ... 0b00010101 => self.registers_dp[(x - 0b00010010) as usize],
             0b00010110                    => self.register_pc,
             0b00010111                    => self.register_cr,
             _                             => panic!("Invalid register")
@@ -395,16 +397,53 @@ fn main() {
 
     print!("\x1B[?25l");  // Hide cursor
     print!("\x1B[2J");  // Clear screen
+    // Disable line-buffering in terminal and echoing of characters
+    let fd = 0;
+    let mut termios = Termios::from_fd(fd).unwrap();
+    termios.c_lflag = termios.c_lflag & !ICANON;
+    termios.c_lflag = termios.c_lflag & !ECHO;
+    termios.c_cc[VMIN] = 0;
+    termios.c_cc[VTIME] = 0;
+    tcsetattr(fd, TCSANOW, &termios).unwrap();
 
     let mut pc = 0;
+    let mut cycles = 0;
     loop {
         pc = tgs.instruct(program[pc][0], program[pc][1], program[pc][2]) as usize;
-        tgs.update_display();
+        
+        // Every 2000 cycles, or 25Hz, update IO
+        if cycles == 2000 {
+            cycles = 0;
 
-        // Sleep for 2uS to approximate 500kHz clock. Real clock speed will be less due to time
+            tgs.update_display();
+
+            // Read buttons
+            let mut chr = [0; 1];
+            if io::stdin().read(&mut chr).ok().unwrap() == 1 {
+                if chr[0] == 97 {
+                    println!("A pressed!");
+                    tgs.registers_bt[0] = 1;
+                    tgs.registers_bt[1] = 0;
+                }
+                else if chr[0] == 98 {
+                    println!("B pressed!");
+                    tgs.registers_bt[0] = 0;
+                    tgs.registers_bt[1] = 1;
+                }
+            }
+            else {
+                tgs.registers_bt[0] = 0;
+                tgs.registers_bt[1] = 0;
+                println!("          ");
+            }
+        }
+
+        // Sleep for 20uS to approximate 50kHz clock. Real clock speed will be less due to time
         // taken by all calls in this loop.
         unsafe {
-            unistd::usleep(2);
+            unistd::usleep(20);
         }
+
+        cycles = cycles + 1;
     }
 }
