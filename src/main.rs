@@ -16,92 +16,65 @@ impl TGS {
     fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) -> u8 {
         self.register_pc += 1;
 
-        match opcode {
+        // All instructions that allow for either a register or direct value to
+        // be specified as the second operand, make this distinction in the
+        // least significant bit of their opcode. Only the branching
+        // instructions, which all have 0101 in their most significant nibble,
+        // do not conform to this and do not use the second operand.
+        let value_right = if ((opcode & 0b11110000) != 0b01010000) & ((opcode & 1) == 0) {
+            self.load_register(operand_right)
+        }
+        else {
+            operand_right
+        };
+
+        // Ignore least significant bit
+        match opcode & 0b11111110 {
             0b00010000 => {
                 // ADD
-                let result = self.load_register(operand_left) + self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00010001 => {
-                // ADD
-                let result = self.load_register(operand_left) + operand_right;
+                let result = self.load_register(operand_left) + value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00010010 => {
                 // SUB
-                let result = self.load_register(operand_left) - self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00010011 => {
-                // SUB
-                let result = self.load_register(operand_left) - operand_right;
+                let result = self.load_register(operand_left) - value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00100000 => {
                 // LSH
-                let result = self.load_register(operand_left) << self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00100001 => {
-                // LSH
-                let result = self.load_register(operand_left) << operand_right;
+                let result = self.load_register(operand_left) << value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00100010 => {
                 // RSH
-                let result = self.load_register(operand_left) >> self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00100011 => {
-                // RSH
-                let result = self.load_register(operand_left) >> operand_right;
+                let result = self.load_register(operand_left) >> value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110000 => {
                 // AND
-                let result = self.load_register(operand_left) & self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00110001 => {
-                // AND
-                let result = self.load_register(operand_left) & operand_right;
+                let result = self.load_register(operand_left) & value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110010 => {
                 // OR
-                let result = self.load_register(operand_left) | self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00110011 => {
-                // OR
-                let result = self.load_register(operand_left) | operand_right;
+                let result = self.load_register(operand_left) | value_right;
                 self.store_register(operand_left, result);
             }
 
             0b00110100 => {
                 // XOR
-                let result = self.load_register(operand_left) ^ self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-            0b00110101 => {
-                // XOR
-                let result = self.load_register(operand_left) ^ operand_right;
+                let result = self.load_register(operand_left) ^ value_right;
                 self.store_register(operand_left, result);
             }
 
             0b01000000 => {
                 // CMP
-                let result = self.load_register(operand_left) - self.load_register(operand_right);
-                self.register_cr = result;
-            }
-            0b01000001 => {
-                // CMP
-                let result = self.load_register(operand_left) - operand_right;
+                let result = self.load_register(operand_left) - value_right;
                 self.register_cr = result;
             }
 
@@ -140,13 +113,7 @@ impl TGS {
 
             0b01100000 => {
                 // MOV
-                let result = self.load_register(operand_right);
-                self.store_register(operand_left, result);
-            }
-
-            0b01100001 => {
-                // MOV
-                self.store_register(operand_left, operand_right);
+                self.store_register(operand_left, value_right);
             }
 
             _          => panic!("Invalid opcode")
