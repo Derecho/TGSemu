@@ -384,17 +384,7 @@ fn main() {
         program.push(buf);
     }
 
-    let ui = UI;
-
-    let mut tgs = TGS {
-        registers_gp: [0; 8],
-        registers_bt: [0; 2],
-        registers_dp: [0; 4],
-        register_pc: 0,
-        register_cr: 0,
-        ui: ui
-    };
-
+    // Prepare terminal
     print!("\x1B[?25l");  // Hide cursor
     print!("\x1B[2J");  // Clear screen
     // Disable line-buffering in terminal and echoing of characters
@@ -406,8 +396,20 @@ fn main() {
     termios.c_cc[VTIME] = 0;
     tcsetattr(fd, TCSANOW, &termios).unwrap();
 
+    // Set up console
+    let ui = UI;
+    let mut tgs = TGS {
+        registers_gp: [0; 8],
+        registers_bt: [0; 2],
+        registers_dp: [0; 4],
+        register_pc: 0,
+        register_cr: 0,
+        ui: ui
+    };
+
     let mut pc = 0;
     let mut cycles = 0;
+    // Main emulation loop
     loop {
         pc = tgs.instruct(program[pc][0], program[pc][1], program[pc][2]) as usize;
         
