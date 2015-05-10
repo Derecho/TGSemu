@@ -70,6 +70,9 @@ impl tgs::TGSUI for TerminalUI {
         if (dp[0] & 1) == 1 {
             print!("_");
         }
+        else {
+            print!(" ");
+        }
 
         print!("\n");
         io::stdout().flush().ok();
@@ -148,6 +151,9 @@ impl tgs::TGSUI for TerminalUI {
         if ((dp[0] >> 1) & 1) == 1 {
             print!("|");
         }
+        else {
+            print!(" ");
+        }
 
         print!("\n");
         io::stdout().flush().ok();
@@ -225,6 +231,9 @@ impl tgs::TGSUI for TerminalUI {
         }
         if ((dp[0] >> 2) & 1) == 1 {
             print!("|");
+        }
+        else {
+            print!(" ");
         }
 
         print!("\n");
