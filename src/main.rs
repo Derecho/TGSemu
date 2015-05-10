@@ -13,15 +13,15 @@ use std::process;
 use libc::funcs::posix88::unistd;
 use termios::*;
 
-struct TGS {
+struct TGS<T: TGSUI> {
     registers_gp: [u8; 8],
     registers_bt: [u8; 2],
     registers_dp: [u8; 4],
     register_pc: u8,
     register_cr: u8,
-    ui: UI,
+    ui: T,
 }
-impl TGS {
+impl<T: TGSUI> TGS<T> {
     fn instruct(&mut self, opcode: u8, operand_left: u8, operand_right: u8) -> u8 {
         self.register_pc += 1;
 
@@ -156,10 +156,33 @@ impl TGS {
     fn update_display(&self) {
         self.ui.update_display(self.registers_dp);
     }
+
+    fn update_buttons(&mut self) {
+        self.ui.update_buttons(&mut self.registers_bt);
+    }
 }
 
-struct UI;
-impl UI {
+trait TGSUI {
+    fn init(&self);
+    fn update_display(&self, dp: [u8; 4]);
+    fn update_buttons(&self, bt: &mut [u8; 2]);
+}
+
+struct TerminalUI;
+impl TGSUI for TerminalUI {
+    fn init(&self) {
+        print!("\x1B[?25l");  // Hide cursor
+        print!("\x1B[2J");  // Clear screen
+        // Disable line-buffering in terminal and echoing of characters
+        let fd = 0;
+        let mut termios = Termios::from_fd(fd).unwrap();
+        termios.c_lflag = termios.c_lflag & !ICANON;
+        termios.c_lflag = termios.c_lflag & !ECHO;
+        termios.c_cc[VMIN] = 0;
+        termios.c_cc[VTIME] = 0;
+        tcsetattr(fd, TCSANOW, &termios).unwrap();
+    }
+
     fn update_display(&self, dp: [u8; 4]) {
         //  _   _   _   _
         // |_| |_| |_| |_|
@@ -359,9 +382,31 @@ impl UI {
         print!("\n");
         io::stdout().flush().ok();
     }
+
+    fn update_buttons(&self, bt: &mut [u8; 2]) {
+        let mut chr = [0; 1];
+        if io::stdin().read(&mut chr).ok().unwrap() == 1 {
+            if chr[0] == 97 {
+                println!("A pressed!");
+                bt[0] = 1;
+                bt[1] = 0;
+            }
+            else if chr[0] == 98 {
+                println!("B pressed!");
+                bt[0] = 0;
+                bt[1] = 1;
+            }
+        }
+        else {
+            bt[0] = 0;
+            bt[1] = 0;
+            println!("          ");
+        }
+    }
 }
 
 fn main() {
+    // Check arguments
     if env::args().count() != 2 {
         println!("Usage: {} <rom.bin>", env::args().next().unwrap());
         process::exit(1);
@@ -384,20 +429,9 @@ fn main() {
         program.push(buf);
     }
 
-    // Prepare terminal
-    print!("\x1B[?25l");  // Hide cursor
-    print!("\x1B[2J");  // Clear screen
-    // Disable line-buffering in terminal and echoing of characters
-    let fd = 0;
-    let mut termios = Termios::from_fd(fd).unwrap();
-    termios.c_lflag = termios.c_lflag & !ICANON;
-    termios.c_lflag = termios.c_lflag & !ECHO;
-    termios.c_cc[VMIN] = 0;
-    termios.c_cc[VTIME] = 0;
-    tcsetattr(fd, TCSANOW, &termios).unwrap();
-
-    // Set up console
-    let ui = UI;
+    // Set up game console
+    let ui = TerminalUI;
+    ui.init();  // Prepare terminal
     let mut tgs = TGS {
         registers_gp: [0; 8],
         registers_bt: [0; 2],
@@ -407,9 +441,9 @@ fn main() {
         ui: ui
     };
 
+    // Main emulation loop
     let mut pc = 0;
     let mut cycles = 0;
-    // Main emulation loop
     loop {
         pc = tgs.instruct(program[pc][0], program[pc][1], program[pc][2]) as usize;
         
@@ -418,26 +452,7 @@ fn main() {
             cycles = 0;
 
             tgs.update_display();
-
-            // Read buttons
-            let mut chr = [0; 1];
-            if io::stdin().read(&mut chr).ok().unwrap() == 1 {
-                if chr[0] == 97 {
-                    println!("A pressed!");
-                    tgs.registers_bt[0] = 1;
-                    tgs.registers_bt[1] = 0;
-                }
-                else if chr[0] == 98 {
-                    println!("B pressed!");
-                    tgs.registers_bt[0] = 0;
-                    tgs.registers_bt[1] = 1;
-                }
-            }
-            else {
-                tgs.registers_bt[0] = 0;
-                tgs.registers_bt[1] = 0;
-                println!("          ");
-            }
+            tgs.update_buttons();
         }
 
         // Sleep for 20uS to approximate 50kHz clock. Real clock speed will be less due to time
